@@ -114,7 +114,8 @@ void loop()
   //  MeasureAnalog();
   //  MeasureVolume();
   MeasureFHT();
-  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
+  renderWaveform();
+//  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
   // Turn the LED on, then pause
   //  leds[0] = CRGB::Red;
   //  FastLED.show();
