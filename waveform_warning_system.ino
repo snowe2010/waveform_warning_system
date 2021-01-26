@@ -1,16 +1,37 @@
 //#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 
-// LED Setup
+/***************************
+ ********* FastLED *********
+****************************/
 
-#define LED_PIN     3
-#define NUM_LEDS    54
+//#define LED_PIN     22
+#define NUM_LEDS    54*3
+#define LEDS_PER_ROW 54   // LEDs per row, should be same as xres
 #define BRIGHTNESS  128
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
-CRGB leds[NUM_LEDS];
+CRGB leds1[NUM_LEDS];
+CRGB leds2[NUM_LEDS];
+CRGB leds3[NUM_LEDS];
+CRGB leds4[NUM_LEDS];
+CRGB leds5[NUM_LEDS];
+CRGB leds6[NUM_LEDS];
+CRGB leds7[NUM_LEDS];
+CRGB leds8[NUM_LEDS];
+CRGB leds9[NUM_LEDS];
+
+#define xres 54
+#define yres 13
+int Intensity[xres] = { }; // initialize Frequency Intensity to zero
+int Displacement = 1;
+
+/***************************
+ *********** FHT ***********
+****************************/
 
 // FHT, http://wiki.openmusiclabs.com/wiki/ArduinoFHT
+
 #define LOG_OUT 1 // use the log output function
 #define LIN_OUT8 1 // use the linear byte output function
 #define OCTAVE 1
@@ -24,7 +45,7 @@ CRGB leds[NUM_LEDS];
 
 // consts
 #define AmpMax (1024 / 2)
-#define MicSamples (1024*10) // Three of these time-weightings have been internationally standardised, 'S' (1 s) originally called Slow, 'F' (125 ms) originally called Fast and 'I' (35 ms) originally called Impulse.
+#define MicSamples (1024*3) // Three of these time-weightings have been internationally standardised, 'S' (1 s) originally called Slow, 'F' (125 ms) originally called Fast and 'I' (35 ms) originally called Impulse.
 
 // modes
 #define Use33 // use 3.3 voltage. the 5v voltage from usb is not regulated. this is much more stable.
@@ -102,55 +123,122 @@ void setup()
   // serial
   Serial.begin(115200);
   while (!Serial); // Wait untilSerial is ready - Leonardo
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+
+  Serial.println("Running setup");
+  FastLED.addLeds<LED_TYPE, 22, COLOR_ORDER>(leds1, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 23, COLOR_ORDER>(leds2, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 24, COLOR_ORDER>(leds3, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 25, COLOR_ORDER>(leds4, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 26, COLOR_ORDER>(leds5, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 27, COLOR_ORDER>(leds6, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 28, COLOR_ORDER>(leds7, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 29, COLOR_ORDER>(leds8, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, 30, COLOR_ORDER>(leds9, NUM_LEDS).setCorrection( TypicalLEDStrip );
+
   FastLED.setBrightness(  BRIGHTNESS );
-  fill_solid(leds, NUM_LEDS, CRGB(0, 0, 0)); // off all LED before start
+
+  fill_solid(leds1, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds2, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds3, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds4, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds5, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds6, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds7, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds8, NUM_LEDS, CRGB(0, 0, 0));
+  fill_solid(leds9, NUM_LEDS, CRGB(0, 0, 0));
+  
+  int color = 255;
+  for (int i = 54; i < 54*2; i++) {
+    leds5[i] = CHSV(color, 255, BRIGHTNESS);
+    color -= 255 / xres;
+  }
+
   FastLED.show();
 }
 
 void loop()
 {
-  // what do we want to do?
-  //  MeasureAnalog();
-  //  MeasureVolume();
+  Serial.println("loop");
   MeasureFHT();
-  renderWaveform();
-//  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
-  // Turn the LED on, then pause
-  //  leds[0] = CRGB::Red;
-  //  FastLED.show();
-  //  delay(500);
-  //  // Now turn the LED off, then pause
-  //  leds[0] = CRGB::Black;
-  //  FastLED.show();
-  //  delay(500);
+  //  renderWaveform();
+  //  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
+  calculateIntensity();
+//  displayUpdate();
+  leds1[0] = CRGB::Red;
+  FastLED.show();
+  delay(50);
+  // Now turn the LED off, then pause
+  leds1[0] = CRGB::Black;
+  FastLED.show();
+  delay(50);
+  leds1[0] = CRGB::Red;
+  FastLED.show();
+  delay(50);
+  // Now turn the LED off, then pause
+  leds1[0] = CRGB::Black;
+  FastLED.show();
+  delay(50);
+  leds1[0] = CRGB::Red;
+  FastLED.show();
+  delay(50);
+  // Now turn the LED off, then pause
+  leds1[0] = CRGB::Black;
+  FastLED.show();
+  delay(50);
+  leds1[0] = CRGB::Red;
+  FastLED.show();
+  delay(50);
+  // Now turn the LED off, then pause
+  leds1[0] = CRGB::Black;
+  FastLED.show();
+  delay(50);
+  
+  FastLED.show();
 }
 
+void calculateIntensity() {
+  for (int i = 2; i < (xres * Displacement) + 2; i += Displacement) {
+    FreqOutData[i] = constrain(FreqOutData[i], 0 , 1024);          // set max value for input data
+    FreqOutData[i] = map(FreqOutData[i], 0, 1024, 0, yres);        // map data to fit our display
+//    Intensity[(i / Displacement) - 2] --;                          // Decrease displayed value
+//    if (FreqOutData[i] > Intensity[(i / Displacement) - 2]) {      // Match displayed value to measured value
+//      Intensity[(i / Displacement) - 2] = FreqOutData[i];
+//    }
+  }
+}
 
-void renderWaveform() {
+/**
+  void renderWaveform() {
   //  Serial.println("render waveform");
   for (int i = 0; i < FHT_N / 2 - 6; i++) {
     int binAmp = FreqOutData[i];
     //    if (binAmp > 1) {
-    if (0 < binAmp && binAmp <= 20) {
+    if (0 < binAmp && binAmp <= 10) {
+  //      Serial.println("below 20");
       mirrorWaveform(i, CRGB::Black);
       //      leds[i+31] = CRGB::Black;
-    } else if (20 < binAmp && binAmp <= 50) {
+    } else if (10 < binAmp && binAmp <= 50) {
+      Serial.println("20-50");
       mirrorWaveform(i, CRGB::Amethyst);
       //      leds[i+31] = CRGB::Amethyst;
     } else if (50 < binAmp && binAmp <= 60) {
+      Serial.println("50-60");
       mirrorWaveform(i, CRGB::Aqua);
       //      leds[i+31] = CRGB::Aqua;
     } else if (15 < binAmp && binAmp <= 20) {
+      Serial.println("15-20");
       mirrorWaveform(i, CRGB::Aquamarine);
       //      leds[i+31] = CRGB::Aquamarine;
     } else if (20 < binAmp && binAmp <= 25) {
+      Serial.println("20-25");
       mirrorWaveform(i, CRGB::Azure);
       //      leds[i+31] = CRGB::Azure;
     } else if (25 < binAmp && binAmp <= 30) {
+      Serial.println("25-30");
       mirrorWaveform(i, CRGB::DarkBlue);
       //      leds[i+31] = CRGB::DarkBlue;
     } else if (30 < binAmp) {
+      Serial.println("above 30");
       mirrorWaveform(i, CRGB::Red);
       //      leds[i+31] = CRGB::Red;
     } else {
@@ -159,11 +247,118 @@ void renderWaveform() {
     }
   }
   FastLED.show();
+  }
+**/
+
+
+void displayUpdate() {
+  int color = 0;
+  
+  leds1[1] = CRGB::White;
+  FastLED.show();
+  for (int i = 0; i < xres; i++) {
+    for (int j = 0; j < yres; j++) {
+      
+      leds1[i] = CRGB::White;
+  FastLED.show();
+      if (j <= Intensity[i]) {                                // Light everything within the intensity range
+
+        lightLedBasedOnRow(i, CHSV(color, 255, BRIGHTNESS), j);
+        //        if (j%2 == 0) {
+        //          Serial.println("J%2==0");
+        //          leds1[(xres*(j+1))-i-1] = CHSV(color, 255, BRIGHTNESS);
+        //        } else {
+        //          Serial.println("J%2!=0");
+        //          leds1[(xres*j)+i] = CHSV(color, 255, BRIGHTNESS);
+        //        }
+      } else {                                                  // Everything outside the range goes dark
+//        Serial.print("darken: x"); 
+        lightLedBasedOnRow(i, CHSV(color, 255, BRIGHTNESS), j);
+        //        if (j%2 == 0) {
+        //          Serial.println("J%2==0");
+        //          leds1[(xres*(j+1))-i-1] = CHSV(color, 255, 0);
+        //        } else {
+        //          Serial.println("J%2!=0");
+        //          leds1[(xres*j)+i] = CHSV(color, 255, 0);
+        //        }
+      }
+  FastLED.show();
+      
+    }
+    color += 255 / xres;                                    // Increment the Hue to get the Rainbow
+  }
+}
+
+
+void lightLedBasedOnRow(int led, CHSV color, int row) {
+  switch (row)  {
+    case 0:
+      lightLedFromArrayAndRow(leds5, LEDS_PER_ROW*2, led, color, row);
+      lightLedFromArrayAndRow(leds5, LEDS_PER_ROW*0, led, color, row);
+      break;
+    case 1:
+      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*0, led, color, row);
+      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*2, led, color, row);
+      break;
+    case 2:
+      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*1, led, color, row);
+      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*1, led, color, row);
+      break;
+    case 3:
+      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*2, led, color, row);
+      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*0, led, color, row);
+    case 4:
+      lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*0, led, color, row);
+      lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*2, led, color, row);
+    case 5:
+      lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*1, led, color, row);
+      lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*1, led, color, row);
+    case 6:
+      lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*2, led, color, row);
+      lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*0, led, color, row);
+    case 7:
+      lightLedFromArrayAndRow(leds8, LEDS_PER_ROW*0, led, color, row);
+      lightLedFromArrayAndRow(leds2, LEDS_PER_ROW*2, led, color, row);
+    case 8:
+      lightLedFromArrayAndRow(leds8, LEDS_PER_ROW*1, led, color, row);
+      lightLedFromArrayAndRow(leds2, LEDS_PER_ROW*1, led, color, row);
+    case 9:
+      lightLedFromArrayAndRow(leds8, LEDS_PER_ROW*2, led, color, row);
+      lightLedFromArrayAndRow(leds2, LEDS_PER_ROW*0, led, color, row);
+    case 10:
+      lightLedFromArrayAndRow(leds9, LEDS_PER_ROW*0, led, color, row);
+      lightLedFromArrayAndRow(leds1, LEDS_PER_ROW*2, led, color, row);
+    case 11:
+      lightLedFromArrayAndRow(leds9, LEDS_PER_ROW*1, led, color, row);
+      lightLedFromArrayAndRow(leds1, LEDS_PER_ROW*1, led, color, row);
+    case 12:
+      lightLedFromArrayAndRow(leds9, LEDS_PER_ROW*2, led, color, row);
+      lightLedFromArrayAndRow(leds1, LEDS_PER_ROW*0, led, color, row);
+      break;
+  }
+}
+
+
+void lightLedFromArrayAndRow(CRGB arr[], int offset, int column, CHSV color, int row) {
+//  Serial.println("call made successfully");
+  if (row % 3 == 0) {
+    Serial.println("setting led for mod 0");
+//    Serial.print("Offset: ");
+//    Serial.print(offset);
+//    Serial.print(" column: ");
+//    Serial.print(column);
+//    Serial.print(" row: ");
+//    Serial.println(row);
+    arr[offset + (xres * (row + 1)) - column - 1] = color;
+  } else {
+    Serial.println("setting led");
+    arr[offset + column] = color;
+  }
 }
 
 void mirrorWaveform(uint8_t colorIndex, CRGB color) {
-  leds[27-colorIndex] = color;
-  leds[28 + colorIndex] = color;
+  leds1[27 - colorIndex] = color;
+  leds1[28 + colorIndex] = color;
 }
 
 // measure basic properties of the input signal
@@ -200,10 +395,6 @@ void MeasureAnalog()
   Serial.print(", " + String(signalAvg - signalMin));
   Serial.println("");
 
-  //lcd.clear();  //Clears the LCD screen and positions the cursor in the upper-left corner.
-  //lcd.setCursor(6, 0);                    // set the cursor to column 0, line 0
-  //sprintf(lcdLineBuf, "%3d%% %3ddB", (int)soundVolRMS, (int)dB);
-  //lcd.print(lcdLineBuf);
 }
 
 // calculate volume level of the signal and print to serial and LCD
@@ -247,11 +438,6 @@ void MeasureVolume()
   Serial.print("% Avg: " + String(soundVolAvg));
   Serial.print("% RMS: " + String(soundVolRMS));
   Serial.println("% dB: " + String(dB, 3));
-
-  //lcd.clear();  //Clears the LCD screen and positions the cursor in the upper-left corner.
-  //  lcd.setCursor(6, 0);                    // set the cursor to column 6, line 0
-  //  sprintf(lcdLineBuf, "%3d%% %3ddB", (int)soundVolRMS, (int)dB);
-  //  lcd.print(lcdLineBuf);
 
 }
 
@@ -303,14 +489,14 @@ void MeasureFHT()
   Serial.write(FreqOutData, FHT_N / 2); // send out the data
 #else
   // print as text
-  for (int i = 0; i < FHT_N / 2; i++)
-  {
-    Serial.print(FreqOutData[i]);
-    Serial.print(',');
-  }
-  long sample_rate = FHT_N * 1000000l / dt;
-  Serial.print(dt);
-  Serial.print(',');
-  Serial.println(sample_rate);
+//  for (int i = 0; i < FHT_N / 2; i++)
+//  {
+//    Serial.print(FreqOutData[i]);
+//    Serial.print(',');
+//  }
+//  long sample_rate = FHT_N * 1000000l / dt;
+//  Serial.print(dt);
+//  Serial.print(',');
+//  Serial.println(sample_rate);
 #endif
 }
