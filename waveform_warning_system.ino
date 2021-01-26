@@ -7,7 +7,7 @@
 
 //#define LED_PIN     22
 #define NUM_LEDS    54*3
-#define LEDS_PER_ROW 54   // LEDs per row, should be same as xres
+#define LEDS_PER_ROW 54   // LEDs per row, should be same as LEDS_PER_ROW
 #define BRIGHTNESS  128
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
@@ -15,15 +15,14 @@ CRGB leds1[NUM_LEDS];
 CRGB leds2[NUM_LEDS];
 CRGB leds3[NUM_LEDS];
 CRGB leds4[NUM_LEDS];
-CRGB leds5[NUM_LEDS];
-CRGB leds6[NUM_LEDS];
-CRGB leds7[NUM_LEDS];
-CRGB leds8[NUM_LEDS];
-CRGB leds9[NUM_LEDS];
+CRGB leds5[1];
+CRGB leds6[1];
+CRGB leds7[1];
+CRGB leds8[1];
+CRGB leds9[1];
 
-#define xres 54
 #define yres 13
-int Intensity[xres] = { }; // initialize Frequency Intensity to zero
+int Intensity[LEDS_PER_ROW] = { }; // initialize Frequency Intensity to zero
 int Displacement = 1;
 
 /***************************
@@ -124,7 +123,7 @@ void setup()
   Serial.begin(115200);
   while (!Serial); // Wait untilSerial is ready - Leonardo
 
-  Serial.println("Running setup");
+  Serial.println("R");
   FastLED.addLeds<LED_TYPE, 22, COLOR_ORDER>(leds1, NUM_LEDS).setCorrection( TypicalLEDStrip );
   FastLED.addLeds<LED_TYPE, 23, COLOR_ORDER>(leds2, NUM_LEDS).setCorrection( TypicalLEDStrip );
   FastLED.addLeds<LED_TYPE, 24, COLOR_ORDER>(leds3, NUM_LEDS).setCorrection( TypicalLEDStrip );
@@ -150,7 +149,7 @@ void setup()
   int color = 255;
   for (int i = 54; i < 54*2; i++) {
     leds5[i] = CHSV(color, 255, BRIGHTNESS);
-    color -= 255 / xres;
+    color -= 255 / LEDS_PER_ROW;
   }
 
   FastLED.show();
@@ -158,7 +157,7 @@ void setup()
 
 void loop()
 {
-  Serial.println("loop");
+  Serial.println("l");
   MeasureFHT();
   //  renderWaveform();
   //  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
@@ -197,9 +196,13 @@ void loop()
 }
 
 void calculateIntensity() {
-  for (int i = 2; i < (xres * Displacement) + 2; i += Displacement) {
+//  Serial.println(freeMemory());
+  for (int i = 2; i < (LEDS_PER_ROW * Displacement) + 2; i += Displacement) {
+//    Serial.println(freeMemory());
     FreqOutData[i] = constrain(FreqOutData[i], 0 , 1024);          // set max value for input data
+//    Serial.println(freeMemory());
     FreqOutData[i] = map(FreqOutData[i], 0, 1024, 0, yres);        // map data to fit our display
+//    Serial.println(freeMemory());
 //    Intensity[(i / Displacement) - 2] --;                          // Decrease displayed value
 //    if (FreqOutData[i] > Intensity[(i / Displacement) - 2]) {      // Match displayed value to measured value
 //      Intensity[(i / Displacement) - 2] = FreqOutData[i];
@@ -207,85 +210,34 @@ void calculateIntensity() {
   }
 }
 
-/**
-  void renderWaveform() {
-  //  Serial.println("render waveform");
-  for (int i = 0; i < FHT_N / 2 - 6; i++) {
-    int binAmp = FreqOutData[i];
-    //    if (binAmp > 1) {
-    if (0 < binAmp && binAmp <= 10) {
-  //      Serial.println("below 20");
-      mirrorWaveform(i, CRGB::Black);
-      //      leds[i+31] = CRGB::Black;
-    } else if (10 < binAmp && binAmp <= 50) {
-      Serial.println("20-50");
-      mirrorWaveform(i, CRGB::Amethyst);
-      //      leds[i+31] = CRGB::Amethyst;
-    } else if (50 < binAmp && binAmp <= 60) {
-      Serial.println("50-60");
-      mirrorWaveform(i, CRGB::Aqua);
-      //      leds[i+31] = CRGB::Aqua;
-    } else if (15 < binAmp && binAmp <= 20) {
-      Serial.println("15-20");
-      mirrorWaveform(i, CRGB::Aquamarine);
-      //      leds[i+31] = CRGB::Aquamarine;
-    } else if (20 < binAmp && binAmp <= 25) {
-      Serial.println("20-25");
-      mirrorWaveform(i, CRGB::Azure);
-      //      leds[i+31] = CRGB::Azure;
-    } else if (25 < binAmp && binAmp <= 30) {
-      Serial.println("25-30");
-      mirrorWaveform(i, CRGB::DarkBlue);
-      //      leds[i+31] = CRGB::DarkBlue;
-    } else if (30 < binAmp) {
-      Serial.println("above 30");
-      mirrorWaveform(i, CRGB::Red);
-      //      leds[i+31] = CRGB::Red;
-    } else {
-      mirrorWaveform(i, CRGB::Black);
-      //      leds[i+31] = CRGB::Black;
-    }
-  }
-  FastLED.show();
-  }
-**/
-
-
 void displayUpdate() {
   int color = 0;
-  
-  leds1[1] = CRGB::White;
-  FastLED.show();
-  for (int i = 0; i < xres; i++) {
+  for (int i = 0; i < LEDS_PER_ROW; i++) {
     for (int j = 0; j < yres; j++) {
-      
-      leds1[i] = CRGB::White;
-  FastLED.show();
+ 
       if (j <= Intensity[i]) {                                // Light everything within the intensity range
 
         lightLedBasedOnRow(i, CHSV(color, 255, BRIGHTNESS), j);
         //        if (j%2 == 0) {
         //          Serial.println("J%2==0");
-        //          leds1[(xres*(j+1))-i-1] = CHSV(color, 255, BRIGHTNESS);
+        //          leds1[(LEDS_PER_ROW*(j+1))-i-1] = CHSV(color, 255, BRIGHTNESS);
         //        } else {
         //          Serial.println("J%2!=0");
-        //          leds1[(xres*j)+i] = CHSV(color, 255, BRIGHTNESS);
+        //          leds1[(LEDS_PER_ROW*j)+i] = CHSV(color, 255, BRIGHTNESS);
         //        }
       } else {                                                  // Everything outside the range goes dark
 //        Serial.print("darken: x"); 
         lightLedBasedOnRow(i, CHSV(color, 255, BRIGHTNESS), j);
         //        if (j%2 == 0) {
         //          Serial.println("J%2==0");
-        //          leds1[(xres*(j+1))-i-1] = CHSV(color, 255, 0);
+        //          leds1[(LEDS_PER_ROW*(j+1))-i-1] = CHSV(color, 255, 0);
         //        } else {
         //          Serial.println("J%2!=0");
-        //          leds1[(xres*j)+i] = CHSV(color, 255, 0);
+        //          leds1[(LEDS_PER_ROW*j)+i] = CHSV(color, 255, 0);
         //        }
       }
-  FastLED.show();
-      
     }
-    color += 255 / xres;                                    // Increment the Hue to get the Rainbow
+    color += 255 / LEDS_PER_ROW;                                    // Increment the Hue to get the Rainbow
   }
 }
 
@@ -338,113 +290,18 @@ void lightLedBasedOnRow(int led, CHSV color, int row) {
   }
 }
 
-
 void lightLedFromArrayAndRow(CRGB arr[], int offset, int column, CHSV color, int row) {
-//  Serial.println("call made successfully");
   if (row % 3 == 0) {
-    Serial.println("setting led for mod 0");
-//    Serial.print("Offset: ");
-//    Serial.print(offset);
-//    Serial.print(" column: ");
-//    Serial.print(column);
-//    Serial.print(" row: ");
-//    Serial.println(row);
-    arr[offset + (xres * (row + 1)) - column - 1] = color;
+    arr[offset + (LEDS_PER_ROW * (row + 1)) - column - 1] = color;
   } else {
-    Serial.println("setting led");
     arr[offset + column] = color;
   }
-}
-
-void mirrorWaveform(uint8_t colorIndex, CRGB color) {
-  leds1[27 - colorIndex] = color;
-  leds1[28 + colorIndex] = color;
-}
-
-// measure basic properties of the input signal
-// determine if analog or digital, determine range and average.
-void MeasureAnalog()
-{
-  long signalAvg = 0, signalMax = 0, signalMin = 1024, t0 = millis();
-  //cli();  // UDRE interrupt slows this way down on arduino1.0
-  for (int i = 0; i < MicSamples; i++)
-  {
-#ifdef ADCFlow
-    while (!(ADCSRA & /*0x10*/_BV(ADIF))); // wait for adc to be ready (ADIF)
-    sbi(ADCSRA, ADIF); // restart adc
-    byte m = ADCL; // fetch adc data
-    byte j = ADCH;
-    int k = ((int)j << 8) | m; // form into an int
-#else
-    int k = analogRead(MicPin);
-#endif
-    signalMin = min(signalMin, k);
-    signalMax = max(signalMax, k);
-    signalAvg += k;
-  }
-  signalAvg /= MicSamples;
-  //sei();
-
-  // print
-  Serial.print("Time: " + String(millis() - t0));
-  Serial.print(" Min: " + String(signalMin));
-  Serial.print(" Max: " + String(signalMax));
-  Serial.print(" Avg: " + String(signalAvg));
-  Serial.print(" Span: " + String(signalMax - signalMin));
-  Serial.print(", " + String(signalMax - signalAvg));
-  Serial.print(", " + String(signalAvg - signalMin));
-  Serial.println("");
-
-}
-
-// calculate volume level of the signal and print to serial and LCD
-void MeasureVolume()
-{
-  long soundVolAvg = 0, soundVolMax = 0, soundVolRMS = 0, t0 = millis();
-  //cli();  // UDRE interrupt slows this way down on arduino1.0
-  for (int i = 0; i < MicSamples; i++)
-  {
-#ifdef ADCFlow
-    while (!(ADCSRA & /*0x10*/_BV(ADIF))); // wait for adc to be ready (ADIF)
-    sbi(ADCSRA, ADIF); // restart adc
-    byte m = ADCL; // fetch adc data
-    byte j = ADCH;
-    int k = ((int)j << 8) | m; // form into an int
-#else
-    int k = analogRead(MicPin);
-#endif
-    int amp = abs(k - AmpMax);
-    amp <<= VolumeGainFactorBits;
-    soundVolMax = max(soundVolMax, amp);
-    soundVolAvg += amp;
-    soundVolRMS += ((long)amp * amp);
-  }
-  soundVolAvg /= MicSamples;
-  soundVolRMS /= MicSamples;
-  float soundVolRMSflt = sqrt(soundVolRMS);
-  //sei();
-
-  float dB = 20.0 * log10(soundVolRMSflt / AmpMax);
-
-  // convert from 0 to 100
-  soundVolAvg = 100 * soundVolAvg / AmpMax;
-  soundVolMax = 100 * soundVolMax / AmpMax;
-  soundVolRMSflt = 100 * soundVolRMSflt / AmpMax;
-  soundVolRMS = 10 * soundVolRMSflt / 7; // RMS to estimate peak (RMS is 0.7 of the peak in sin)
-
-  // print
-  Serial.print("Time: " + String(millis() - t0));
-  Serial.print(" Amp: Max: " + String(soundVolMax));
-  Serial.print("% Avg: " + String(soundVolAvg));
-  Serial.print("% RMS: " + String(soundVolRMS));
-  Serial.println("% dB: " + String(dB, 3));
-
 }
 
 // calculate frequencies in the signal and print to serial
 void MeasureFHT()
 {
-  long t0 = micros();
+//  long t0 = micros();
 #ifdef ADCFlow
   //  cli();  // UDRE interrupt slows this way down on arduino1.0
 #endif
@@ -466,7 +323,7 @@ void MeasureFHT()
 #ifdef ADCFlow
   //  sei();
 #endif
-  long dt = micros() - t0;
+//  long dt = micros() - t0;
   fht_window(); // window the data for better frequency response
   fht_reorder(); // reorder the data before doing the fht
   fht_run(); // process the data in the fht
@@ -483,11 +340,11 @@ void MeasureFHT()
   fht_mag_lin8();
 #endif
 
-#ifdef FreqSerialBinary
-  // print as binary
-  Serial.write(255); // send a start byte
-  Serial.write(FreqOutData, FHT_N / 2); // send out the data
-#else
+//#ifdef FreqSerialBinary
+//  // print as binary
+//  Serial.write(255); // send a start byte
+//  Serial.write(FreqOutData, FHT_N / 2); // send out the data
+//#else
   // print as text
 //  for (int i = 0; i < FHT_N / 2; i++)
 //  {
@@ -498,5 +355,5 @@ void MeasureFHT()
 //  Serial.print(dt);
 //  Serial.print(',');
 //  Serial.println(sample_rate);
-#endif
+//#endif
 }
