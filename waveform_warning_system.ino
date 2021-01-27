@@ -22,8 +22,8 @@ CRGB leds8[NUM_LEDS];
 CRGB leds9[NUM_LEDS];
 
 #define xres 54
-#define yres 13
-int Intensity[xres] = { }; // initialize Frequency Intensity to zero
+#define yres 14
+int Intensity[LEDS_PER_ROW/2] = { }; // initialize Frequency Intensity to zero
 int Displacement = 1;
 
 /***************************
@@ -70,7 +70,7 @@ int Displacement = 1;
 
 #ifdef Linear
 #define FreqOutData fht_lin_out8
-#define FreqGainFactorBits 2
+#define FreqGainFactorBits 6
 #endif
 
 //#define FreqSerialBinary
@@ -147,63 +147,40 @@ void setup()
   fill_solid(leds8, NUM_LEDS, CRGB(0, 0, 0));
   fill_solid(leds9, NUM_LEDS, CRGB(0, 0, 0));
   
-  int color = 255;
-  for (int i = 54; i < 54*2; i++) {
-    leds5[i] = CHSV(color, 255, BRIGHTNESS);
-    color -= 255 / xres;
-  }
+//  int color = 255;
+//  for (int i = 54; i < 54*2; i++) {
+//    leds5[i] = CHSV(color, 255, BRIGHTNESS);
+//    color -= 255 / xres;
+//  }
 
   FastLED.show();
 }
 
 void loop()
 {
-  Serial.println("loop");
+//  Serial.println("loop");
   MeasureFHT();
   //  renderWaveform();
   //  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
+//  delay(1000);
   calculateIntensity();
-//  displayUpdate();
-  leds1[0] = CRGB::Red;
-  FastLED.show();
-  delay(50);
-  // Now turn the LED off, then pause
-  leds1[0] = CRGB::Black;
-  FastLED.show();
-  delay(50);
-  leds1[0] = CRGB::Red;
-  FastLED.show();
-  delay(50);
-  // Now turn the LED off, then pause
-  leds1[0] = CRGB::Black;
-  FastLED.show();
-  delay(50);
-  leds1[0] = CRGB::Red;
-  FastLED.show();
-  delay(50);
-  // Now turn the LED off, then pause
-  leds1[0] = CRGB::Black;
-  FastLED.show();
-  delay(50);
-  leds1[0] = CRGB::Red;
-  FastLED.show();
-  delay(50);
-  // Now turn the LED off, then pause
-  leds1[0] = CRGB::Black;
-  FastLED.show();
-  delay(50);
+  displayUpdate();
   
   FastLED.show();
+//  while(1);
 }
 
 void calculateIntensity() {
-  for (int i = 2; i < (xres * Displacement) + 2; i += Displacement) {
+//  Serial.print(F("Calculate Intensity: "));
+  for (int i = 0; i < ((LEDS_PER_ROW/2) * Displacement); i += Displacement) {
+//    Serial.print(FreqOutData[i]);
+    
     FreqOutData[i] = constrain(FreqOutData[i], 0 , 1024);          // set max value for input data
     FreqOutData[i] = map(FreqOutData[i], 0, 1024, 0, yres);        // map data to fit our display
-//    Intensity[(i / Displacement) - 2] --;                          // Decrease displayed value
-//    if (FreqOutData[i] > Intensity[(i / Displacement) - 2]) {      // Match displayed value to measured value
-//      Intensity[(i / Displacement) - 2] = FreqOutData[i];
-//    }
+    Intensity[(i / Displacement)] --;                          // Decrease displayed value
+    if (FreqOutData[i] > Intensity[(i / Displacement)]) {      // Match displayed value to measured value
+      Intensity[(i / Displacement)] = FreqOutData[i];
+    }
   }
 }
 
@@ -253,37 +230,20 @@ void calculateIntensity() {
 
 void displayUpdate() {
   int color = 0;
-  
-  leds1[1] = CRGB::White;
-  FastLED.show();
-  for (int i = 0; i < xres; i++) {
+  for (int i = 0; i < LEDS_PER_ROW / 2; i++) {
     for (int j = 0; j < yres; j++) {
-      
-      leds1[i] = CRGB::White;
-  FastLED.show();
       if (j <= Intensity[i]) {                                // Light everything within the intensity range
+//Serial.print("intensity: ");
+//Serial.print(Intensity[i]);
+//Serial.print(" i: ");
+//Serial.print(i);
+//Serial.print(" j: ");
+//Serial.println(j);
 
         lightLedBasedOnRow(i, CHSV(color, 255, BRIGHTNESS), j);
-        //        if (j%2 == 0) {
-        //          Serial.println("J%2==0");
-        //          leds1[(xres*(j+1))-i-1] = CHSV(color, 255, BRIGHTNESS);
-        //        } else {
-        //          Serial.println("J%2!=0");
-        //          leds1[(xres*j)+i] = CHSV(color, 255, BRIGHTNESS);
-        //        }
       } else {                                                  // Everything outside the range goes dark
-//        Serial.print("darken: x"); 
-        lightLedBasedOnRow(i, CHSV(color, 255, BRIGHTNESS), j);
-        //        if (j%2 == 0) {
-        //          Serial.println("J%2==0");
-        //          leds1[(xres*(j+1))-i-1] = CHSV(color, 255, 0);
-        //        } else {
-        //          Serial.println("J%2!=0");
-        //          leds1[(xres*j)+i] = CHSV(color, 255, 0);
-        //        }
-      }
-  FastLED.show();
-      
+        lightLedBasedOnRow(i, CHSV(color, 255, 0), j);
+      }      
     }
     color += 255 / xres;                                    // Increment the Hue to get the Rainbow
   }
@@ -293,45 +253,48 @@ void displayUpdate() {
 void lightLedBasedOnRow(int led, CHSV color, int row) {
   switch (row)  {
     case 0:
+      lightLedFromArrayAndRow(leds5, LEDS_PER_ROW, led, color, row);
+      break;
+    case 1:
       lightLedFromArrayAndRow(leds5, LEDS_PER_ROW*2, led, color, row);
       lightLedFromArrayAndRow(leds5, LEDS_PER_ROW*0, led, color, row);
       break;
-    case 1:
+    case 2:
       lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*0, led, color, row);
       lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*2, led, color, row);
       break;
-    case 2:
+    case 3:
       lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*1, led, color, row);
       lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*1, led, color, row);
       break;
-    case 3:
+    case 4:
       lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*2, led, color, row);
       lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*0, led, color, row);
-    case 4:
+    case 5:
       lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*0, led, color, row);
       lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*2, led, color, row);
-    case 5:
+    case 6:
       lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*1, led, color, row);
       lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*1, led, color, row);
-    case 6:
+    case 7:
       lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*2, led, color, row);
       lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*0, led, color, row);
-    case 7:
+    case 8:
       lightLedFromArrayAndRow(leds8, LEDS_PER_ROW*0, led, color, row);
       lightLedFromArrayAndRow(leds2, LEDS_PER_ROW*2, led, color, row);
-    case 8:
+    case 9:
       lightLedFromArrayAndRow(leds8, LEDS_PER_ROW*1, led, color, row);
       lightLedFromArrayAndRow(leds2, LEDS_PER_ROW*1, led, color, row);
-    case 9:
+    case 10:
       lightLedFromArrayAndRow(leds8, LEDS_PER_ROW*2, led, color, row);
       lightLedFromArrayAndRow(leds2, LEDS_PER_ROW*0, led, color, row);
-    case 10:
+    case  11:
       lightLedFromArrayAndRow(leds9, LEDS_PER_ROW*0, led, color, row);
       lightLedFromArrayAndRow(leds1, LEDS_PER_ROW*2, led, color, row);
-    case 11:
+    case  12:
       lightLedFromArrayAndRow(leds9, LEDS_PER_ROW*1, led, color, row);
       lightLedFromArrayAndRow(leds1, LEDS_PER_ROW*1, led, color, row);
-    case 12:
+    case  13:
       lightLedFromArrayAndRow(leds9, LEDS_PER_ROW*2, led, color, row);
       lightLedFromArrayAndRow(leds1, LEDS_PER_ROW*0, led, color, row);
       break;
@@ -340,20 +303,8 @@ void lightLedBasedOnRow(int led, CHSV color, int row) {
 
 
 void lightLedFromArrayAndRow(CRGB arr[], int offset, int column, CHSV color, int row) {
-//  Serial.println("call made successfully");
-  if (row % 3 == 0) {
-    Serial.println("setting led for mod 0");
-//    Serial.print("Offset: ");
-//    Serial.print(offset);
-//    Serial.print(" column: ");
-//    Serial.print(column);
-//    Serial.print(" row: ");
-//    Serial.println(row);
-    arr[offset + (xres * (row + 1)) - column - 1] = color;
-  } else {
-    Serial.println("setting led");
-    arr[offset + column] = color;
-  }
+    arr[offset + 27 - column - 1] = color;
+    arr[offset + 28 + column - 1] = color;
 }
 
 void mirrorWaveform(uint8_t colorIndex, CRGB color) {
