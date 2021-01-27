@@ -6,7 +6,7 @@
 ****************************/
 
 //#define LED_PIN     22
-#define NUM_LEDS    54*3
+#define NUM_LEDS    162
 #define LEDS_PER_ROW 54   // LEDs per row, should be same as LEDS_PER_ROW
 #define BRIGHTNESS  128
 #define LED_TYPE    WS2812B
@@ -16,7 +16,7 @@
 //CRGB leds3[NUM_LEDS];
 CRGB leds4[NUM_LEDS];
 CRGB leds5[NUM_LEDS];
-CRGB leds6[NUM_LEDS];
+CRGB leds6[NUM_LEDS ];
 //CRGB leds7[NUM_LEDS];
 //CRGB leds8[NUM_LEDS];
 //CRGB leds9[NUM_LEDS];
@@ -83,8 +83,8 @@ int Displacement = 1;
 
 void setup()
 {
-  //  delay( 1000 ); // power-up safety delay
-    TIMSK0 = 0; // turn this off else you can't use FastLED
+    delay( 3000 ); // power-up safety delay
+//    TIMSK0 = 0; // turn this off else you can't use FastLED
 
   //pinMode(MicPin, INPUT); // relevant for digital pins. not relevant for analog. however, don't put into digital OUTPUT mode if going to read analog values.
 
@@ -158,28 +158,29 @@ void setup()
 void loop()
 {
   
-    Serial.print("freeMemory()=");
+    Serial.print(F("freeMemory()="));
     Serial.println(freeMemory());
-  Serial.println("l");
+  Serial.println(F("l"));
   MeasureFHT();
   //  renderWaveform();
   //  EVERY_N_MILLISECONDS( 300 ) { renderWaveform(); }
   calculateIntensity();
   displayUpdate();
-  Serial.println("making it here?");
+  Serial.println(F("making it here?"));
   
-    Serial.print("freeMemory()=");
-    Serial.println(freeMemory());
+  Serial.print(F("freeMemory()="));
+  Serial.println(freeMemory());
   FastLED.show();
   
-    Serial.print("freeMemory()=");
+    Serial.print(F("freeMemory()="));
     Serial.println(freeMemory());
   
   Serial.println(F("did it crash?"));
+  FastLED.delay(200);
 }
 
 void calculateIntensity() {
-  for (int i = 2; i < (LEDS_PER_ROW * Displacement) + 2; i += Displacement) {
+  for (int i = 2; i < (32 * Displacement) + 2; i += Displacement) {
     FreqOutData[i] = constrain(FreqOutData[i], 0 , 1024);          // set max value for input data
     FreqOutData[i] = map(FreqOutData[i], 0, 1024, 0, yres);        // map data to fit our display
     Intensity[(i / Displacement) - 2] --;                          // Decrease displayed value
@@ -190,18 +191,18 @@ void calculateIntensity() {
 }
 
 void displayUpdate() {
-  Serial.println("made it here...");
+  Serial.println(F("made it here..."));
   
-    Serial.print("freeMemory()=");
+    Serial.print(F("freeMemory()="));
     Serial.println(freeMemory());
-//  int color = 0;
-//  for (int i = 0; i < LEDS_PER_ROW; i++) {
-//    for (int j = 0; j < yres; j++) {
+  int color = 0;
+  for (int i = 0; i < LEDS_PER_ROW; i++) {
+    for (int j = 0; j < yres; j++) {
 //      Serial.println("yres");
  
-//      if (j <= Intensity[i]) {                                // Light everything within the intensity range
+      if (j <= Intensity[i]) {                                // Light everything within the intensity range
 //        Serial.println(F("intense"));
-//        lightLedBasedOnRow(i, CRGB::White, j);
+        lightLedBasedOnRow(i, CRGB::White, j);
         
 //        FastLED.show();
         //        if (j%2 == 0) {
@@ -211,10 +212,10 @@ void displayUpdate() {
         //          Serial.println("J%2!=0");
         //          leds1[(LEDS_PER_ROW*j)+i] = CHSV(color, 255, BRIGHTNESS);
         //        }
-//      } else {                                                  // Everything outside the range goes dark
+      } else {                                                  // Everything outside the range goes dark
 //        Serial.print("darken: x"); 
 //Serial.println(F("not intense"));
-//        lightLedBasedOnRow(i, CRGB::Black, j);
+        lightLedBasedOnRow(i, CRGB::Black, j);
         //        if (j%2 == 0) {
         //          Serial.println("J%2==0");
 //                  leds5[(LEDS_PER_ROW*(j+1))-i-1] = CRGB::Black; //CHSV(color, 255, 0);
@@ -222,34 +223,10 @@ void displayUpdate() {
         //          Serial.println("J%2!=0");
         //          leds1[(LEDS_PER_ROW*j)+i] = CHSV(color, 255, 0);
         //        }
-//      }
-//    }
-//    color += 255 / LEDS_PER_ROW;                                    // Increment the Hue to get the Rainbow
-//  }
-
-  // Turn the LED on, then pause
-  leds5[0] = CRGB::Red;
-  
-    Serial.print("failing here freeMemory()=");
-    Serial.println(freeMemory());
-  FastLED.show();
-  
-    Serial.print("yep freeMemory()=");
-    Serial.println(freeMemory());
-  delay(500);
-  
-    Serial.print("freeMemory()=");
-    Serial.println(freeMemory());
-  // Now turn the LED off, then pause
-  leds5[0] = CRGB::Black;
-  
-    Serial.print("freeMemory()=");
-    Serial.println(freeMemory());
-  FastLED.show();
-  
-    Serial.print("freeMemory()=");
-    Serial.println(freeMemory());
-  delay(500);
+      }
+    }
+    color += 255 / LEDS_PER_ROW;                                    // Increment the Hue to get the Rainbow
+  }
 }
 
 
@@ -259,17 +236,17 @@ void lightLedBasedOnRow(int led, CRGB color, int row) {
       lightLedFromArrayAndRow(leds5, LEDS_PER_ROW*2, led, color, row);
       lightLedFromArrayAndRow(leds5, LEDS_PER_ROW*0, led, color, row);
       break;
-    case 1:
-      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*0, led, color, row);
-      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*2, led, color, row);
-      break;
-    case 2:
-      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*1, led, color, row);
-      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*1, led, color, row);
-      break;
-    case 3:
-      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*2, led, color, row);
-      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*0, led, color, row);
+//    case 1:
+//      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*0, led, color, row);
+//      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*2, led, color, row);
+//      break;
+//    case 2:
+//      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*1, led, color, row);
+//      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*1, led, color, row);
+//      break;
+//    case 3:
+//      lightLedFromArrayAndRow(leds6, LEDS_PER_ROW*2, led, color, row);
+//      lightLedFromArrayAndRow(leds4, LEDS_PER_ROW*0, led, color, row);
 //    case 4:
 //      lightLedFromArrayAndRow(leds7, LEDS_PER_ROW*0, led, color, row);
 //      lightLedFromArrayAndRow(leds3, LEDS_PER_ROW*2, led, color, row);
